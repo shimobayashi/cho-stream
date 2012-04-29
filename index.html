@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html><head>
+<title>Cho-Stream</title>
+<meta charset="UTF-8">
+<meta name="description" content="" />
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+<link rel="stylesheet" type="text/css" href="mystyle.css" media="all" />
+<script type="text/javascript" src="js/jquery.masonry.min.js"></script>
+<link href='http://fonts.googleapis.com/css?family=Raleway:100' rel='stylesheet' type='text/css'>
+<script type="text/javascript">
+  $(function() {
+      setup();
+  });
+
+  function setup() {
+    setInterval(load, 60 * 1000);
+    //setInterval(load, 10 * 1000);
+    load();
+    $('#container').masonry({itemSelector : '.item'});
+  }
+
+  sinceId = null;
+  function load() {
+    $.ajax({
+      url: 'http://search.twitter.com/search.json?callback=?',
+      dataType: 'json',
+      data: {
+        q: '#chokaigi 超会議',
+        //q: '#photo',
+        include_entities: 1,
+        rpp: 100,
+        since_id: sinceId,
+        //max_id: 196057777150500866,
+        result_type: 'recent',
+        //result_type: 'polular',
+      },
+      success: function(data) {
+        //console.log(data);
+        sinceId = data.results[0].id;
+        console.log(sinceId);
+        tweets = [];
+        for (var i = 0, len = data.results.length; i < len; i++) {
+          tweets.push(data.results[i]);
+        }
+        for (i = len - 1; i >= 0; i--) {
+          tweet = tweets[i];
+          if (!('media' in tweet.entities))
+            continue;
+          for (var j = 0, len2 = tweet.entities.media.length; j < len2; j++) {
+            console.log(tweet);
+            div = $('<div>').addClass('item');
+            img = $('<img>').attr('src', tweet.entities.media[j].media_url);
+            div.append(img);
+            $('#container').prepend(div);
+            (function (div) {
+              $('img', div).bind('load', function() {
+                $('#container').masonry('reload');
+                div.fadeIn('slow');
+              });
+              $('img', div).bind('click', function() {
+                width = $(this).width();
+                height = $(this).height();
+                $(this).hide();
+                div.append($('<div>').addClass('noise').css('width', width).css('height', height));
+              });
+              div.hide();
+            })(div);
+          }
+        }
+      }
+    });
+  }
+
+  function append(tweet) {
+  }
+</script>
+</head><body>
+
+<h1>Cho-Stream</h1>
+<p>Twitter上に投稿されたニコニコ超会議に関する写真を自動で表示してみるテスト(Twitter検索の結果に依存しているのでしばらく放置しないと何も出ないかも)</p>
+<div id="container">
+</div>
+
+<div id="footer">
+  <p>show more info on <a href="https://twitter.com/#!/search/realtime/%23chokaigi%20%E8%B6%85%E4%BC%9A%E8%AD%B0">twitter</a></p>
+</div>
+
+</div>
+
+</div>
+</body></html>
